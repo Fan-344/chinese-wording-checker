@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>中國用語檢查工具</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --ink: #1f1f1d; --dim: #6b6a66; --line: #e3e1dc;
+    --accent: #2b5fa8; --accent-ink: #ffffff;
+    --pass: #1d7a4a; --fail: #b4471a; --err: #b42318;
+    --hi-bg: #ffe0e3; --hi-ink: #9c0006; --mid-bg: #ffe6c7; --mid-ink: #8a4b00; --lo-bg: #d9f2e3; --lo-ink: #0f5a30;
+    --mark: #fff1a8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #18181a; --card: #232326; --ink: #ececea; --dim: #a3a29d; --line: #36363a;
+      --accent: #6c9ce6; --accent-ink: #0f1a2e;
+      --pass: #6fcf97; --fail: #f2a35c; --err: #f08c86;
+      --hi-bg: #4a1f24; --hi-ink: #ffb3b8; --mid-bg: #4a3316; --mid-ink: #ffd39a; --lo-bg: #16382a; --lo-ink: #a5e8c3;
+      --mark: #5a4d0f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.6 -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif; }
+  main { max-width: 1080px; margin: 0 auto; padding: 28px 18px 60px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  .sub { color: var(--dim); margin: 0 0 18px; }
+  .status { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 18px; }
+  .status.error { border-color: var(--err); color: var(--err); }
+  .status .ok { color: var(--pass); font-weight: 700; }
+  .status .warn { color: var(--fail); margin-top: 4px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .panel h2 { font-size: 16px; margin: 0 0 10px; }
+  #drop { border: 2px dashed var(--line); border-radius: 12px; padding: 34px 16px; text-align: center;
+          cursor: pointer; color: var(--dim); transition: .15s; }
+  #drop:hover, #drop.over { border-color: var(--accent); color: var(--ink); background: color-mix(in srgb, var(--accent) 6%, transparent); }
+  #drop strong { color: var(--ink); display: block; font-size: 17px; margin-bottom: 4px; }
+  textarea { width: 100%; min-height: 128px; resize: vertical; border: 1px solid var(--line); border-radius: 8px;
+             padding: 10px; font: inherit; background: var(--bg); color: var(--ink); }
+  button { font: inherit; border: 0; border-radius: 8px; padding: 8px 14px; cursor: pointer;
+           background: var(--accent); color: var(--accent-ink); }
+  button:disabled { opacity: .5; cursor: default; }
+  button.ghost { background: transparent; color: var(--dim); border: 1px solid var(--line); }
+  .options { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; margin: 16px 0; color: var(--dim); }
+  .options label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  .options .spacer { flex: 1; }
+  .options input[type=file] { display: none; }
+  .link { background: none; color: var(--accent); padding: 0; text-decoration: underline; }
+  .card { background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--line);
+          border-radius: 12px; padding: 14px 16px; margin-top: 14px; }
+  .card.pass { border-left-color: var(--pass); }
+  .card.fail { border-left-color: var(--fail); }
+  .card.error { border-left-color: var(--err); }
+  .card header { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .card h3 { margin: 0; font-size: 16px; word-break: break-all; }
+  .card .actions { display: flex; gap: 8px; }
+  .summary { margin: 6px 0 10px; }
+  .dim { color: var(--dim); }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 7px 9px; border-top: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--dim); font-weight: 600; border-top: 0; white-space: nowrap; }
+  td.pos { white-space: nowrap; color: var(--dim); }
+  td.ctx { min-width: 260px; }
+  td.note { color: var(--dim); min-width: 160px; }
+  mark { background: var(--mark); color: inherit; padding: 0 2px; border-radius: 3px; font-weight: 700; }
+  .risk { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+  .risk-高 { background: var(--hi-bg); color: var(--hi-ink); }
+  .risk-中 { background: var(--mid-bg); color: var(--mid-ink); }
+  .risk-低 { background: var(--lo-bg); color: var(--lo-ink); }
+  footer { margin-top: 36px; color: var(--dim); font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>中國用語檢查工具</h1>
+  <p class="sub">檢查文案中的中國用語並提供台灣慣用語建議。檔案只在你的瀏覽器內處理，不會上傳到任何伺服器。</p>
+
+  <div id="lexicon-status" class="status"><span class="dim">正在載入詞庫…</span></div>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>檢查檔案</h2>
+      <div id="drop" tabindex="0" role="button" aria-label="拖曳或點擊選擇檔案">
+        <strong>把檔案拖到這裡，或點擊選擇</strong>
+        支援 .txt、.csv、.xlsx，可一次選多個
+      </div>
+      <input id="file-input" type="file" multiple accept=".txt,.csv,.xlsx" hidden>
+    </section>
+    <section class="panel">
+      <h2>或貼上文字</h2>
+      <textarea id="paste-text" placeholder="貼上要檢查的文案…"></textarea>
+      <div style="margin-top:8px; display:flex; gap:8px;">
+        <button id="run-paste" disabled>檢查貼上文字</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="options">
+    <span>檢查等級：</span>
+    <label><input type="checkbox" id="level-高" checked> 高</label>
+    <label><input type="checkbox" id="level-中" checked> 中</label>
+    <label><input type="checkbox" id="level-低"> 低（僅供參考，不影響通過判定）</label>
+    <span class="spacer"></span>
+    <label class="link" title="測試尚未上傳的詞庫草稿；僅本次瀏覽有效">
+      <input type="file" id="custom-lexicon" accept=".csv">試用自訂詞庫
+    </label>
+    <button class="link" id="reset-lexicon">重新載入正式詞庫</button>
+    <button class="ghost" id="clear">清除結果</button>
+  </div>
+
+  <div id="results"></div>
+
+  <footer>
+    風險等級：高＝台灣讀者一眼可辨，公開文案一律替換；中＝已部分滲透，正式文案仍建議替換；低＝已通用或語境可接受，僅供參考。
+    詞庫維護：誤判請在該詞的「例外詞」欄補上正確詞；不需管的詞把「啟用」改為「否」。
+  </footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="matcher.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

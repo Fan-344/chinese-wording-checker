@@ -1,0 +1,5 @@
+.venv/
+檢查報告/
+.DS_Store
+.claude/
+__pycache__/
